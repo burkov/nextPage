@@ -71,6 +71,7 @@ fun main() {
                             val key = it.substringBefore("=").trim().removePrefix("var").trim()
                             val value = Jsoup.parse(StringEscapeUtils.unescapeJava(it.substringAfter("=").trim()))
                                 .text()
+                                .replace(Regex("[^\\p{Print}]"), "?")
                                 .removeSurrounding("\"")
                                 .trim()
                             key to value
