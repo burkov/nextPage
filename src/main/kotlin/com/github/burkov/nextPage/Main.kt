@@ -8,7 +8,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.awt.Toolkit.getDefaultToolkit
 import java.awt.datatransfer.StringSelection
-
+import java.lang.Character.isWhitespace
 
 
 data class Tokens(val csrf: String, val cookie: String) {
@@ -69,11 +69,22 @@ fun main() {
                     val map = result.get().split(";\n").filter { it.contains("var title") || it.contains("var page") }
                         .map {
                             val key = it.substringBefore("=").trim().removePrefix("var").trim()
+                            val isPage = key == "page"
                             val value = Jsoup.parse(StringEscapeUtils.unescapeJava(it.substringAfter("=").trim()))
                                 .text()
+                                .replace('’', '\'')
+                                .replace(Regex("[“”]"), "\"")
                                 .replace(Regex("[^\\p{Print}]"), "?")
                                 .removeSurrounding("\"")
                                 .trim()
+                                .split(" ")
+                                .mapIndexed { index, s ->
+                                    when {
+                                        isPage && index % 100 == 0 -> "i$index $s"
+                                        else -> s
+                                    }
+                                }
+                                .joinToString(" ")
                             key to value
                         }
                         .toMap()
